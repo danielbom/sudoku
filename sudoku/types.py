@@ -1,6 +1,5 @@
 from typing import List, NamedTuple, Tuple
 
-
 Puzzle = List[List[int]]
 Coord = Tuple[int, int]
 

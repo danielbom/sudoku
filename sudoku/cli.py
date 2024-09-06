@@ -1,12 +1,18 @@
 import argparse
 import subprocess
-
 from pathlib import Path
 
-from .collect_next_steps import make_collect_valid_blocks, make_collect_valid_options
-from .helpers import check_puzzle_is_complete, check_puzzle_is_solution, check_puzzle_is_valid, puzzle_display, puzzle_from_csv, why_is_invalid
+from .collect_next_steps import (make_collect_valid_blocks,
+                                 make_collect_valid_options)
+from .helpers import (check_puzzle_is_complete, check_puzzle_is_solution,
+                      check_puzzle_is_valid, puzzle_display, puzzle_from_csv,
+                      why_is_invalid)
 from .metrics import Metrics
-from .next_step import make_compute_next_step, make_compute_next_step_block_column, make_compute_next_step_block_row, make_compute_next_step_heuristic1, make_compute_next_step_heuristic2
+from .next_step import (make_compute_next_step,
+                        make_compute_next_step_block_column,
+                        make_compute_next_step_block_row,
+                        make_compute_next_step_heuristic1,
+                        make_compute_next_step_heuristic2)
 from .solver import Solver
 
 

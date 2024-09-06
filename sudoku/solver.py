@@ -1,14 +1,15 @@
 from typing import Optional
 
 from .collect_next_steps import CollectNextSteps
+from .helpers import puzzle_copy
 from .metrics import Metrics
 from .next_step import NextStep
-from .helpers import puzzle_copy
 from .types import Puzzle
 
 
 class Solver:
-    def __init__(self, next_step: NextStep, collect_next_steps: CollectNextSteps, metrics: Metrics):
+    def __init__(self, next_step: NextStep,
+                 collect_next_steps: CollectNextSteps, metrics: Metrics):
         self.next_step = next_step
         self.collect_next_steps = collect_next_steps
         self.metrics = metrics

@@ -1,4 +1,5 @@
-from sudoku import puzzle_display, puzzle_from_csv, puzzle_is_solution, puzzle_solve, puzzle_is_valid
+from sudoku import (puzzle_display, puzzle_from_csv, puzzle_is_solution,
+                    puzzle_is_valid, puzzle_solve)
 
 
 def run(puzzle_path, puzzle_solution_path=None):

@@ -1,8 +1,7 @@
+import functools
 from dataclasses import dataclass
 from datetime import datetime
-import functools
 from typing import List, NamedTuple, Optional, Tuple
-
 
 METRIC_DISPLAY_INTERVAL = 1e10  # 5000
 
@@ -93,7 +92,9 @@ def blocks_is_valid(blocks: Blocks):
     if metrics.blocks_is_valid % METRIC_DISPLAY_INTERVAL == 0:
         metrics.display()
     rows, cols = collect_rows_and_cols(blocks)
-    return all(map(values_is_valid, rows)) and all(map(values_is_valid, cols)) and values_is_valid(blocks.curr)
+    return all(map(values_is_valid, rows)) and \
+        all(map(values_is_valid, cols)) and \
+        values_is_valid(blocks.curr)
 
 
 def why_is_invalid(puzzle: Puzzle):
@@ -131,7 +132,8 @@ def why_is_invalid(puzzle: Puzzle):
 def collect_block_indexes(block_ix: int) -> List[Tuple[int, int]]:
     block_row = block_ix // 3
     block_col = block_ix % 3
-    return [(i + block_row * 3, j + block_col * 3) for i in range(3) for j in range(3)]
+    return [(i + block_row * 3, j + block_col * 3)
+            for i in range(3) for j in range(3)]
 
 
 def puzzle_collect_block(grid: Puzzle, block_ix: int) -> List[int]:
@@ -208,7 +210,10 @@ def get_block_index(row_ix: int, col_ix: int):
     return row_ix // 3 * 3 + col_ix // 3
 
 
-def puzzle_solve_rec(puzzle: Puzzle, row_ix: int = 0, col_ix: int = 0) -> Optional[Puzzle]:
+def puzzle_solve_rec(
+    puzzle: Puzzle,
+    row_ix: int = 0, col_ix: int = 0
+) -> Optional[Puzzle]:
     if row_ix == 9 and col_ix == 0:
         return puzzle
 
@@ -224,7 +229,8 @@ def puzzle_solve_rec(puzzle: Puzzle, row_ix: int = 0, col_ix: int = 0) -> Option
 
     for option in range(1, 10):
         puzzle[row_ix][col_ix] = option
-        if blocks_is_valid(puzzle_collect_blocks(puzzle, block_ix)) and puzzle_solve_rec(puzzle, next_row_ix, next_col_ix):
+        if blocks_is_valid(puzzle_collect_blocks(puzzle, block_ix)) and \
+                puzzle_solve_rec(puzzle, next_row_ix, next_col_ix):
             return puzzle
         puzzle[row_ix][col_ix] = 0
     return None
@@ -242,7 +248,8 @@ def best_path_next_step(puzzle: Puzzle) -> List[Tuple[int, int]]:
         for col_ix in cols:
             if puzzle[row_ix][col_ix] == 0:
                 best_path.append((row_ix, col_ix))
-    return sorted(best_path, key=lambda p: (blocks.index(get_block_index(p[0], p[1])), rows.index(p[0]), rows.index(p[1])))
+    return sorted(best_path,
+                  key=lambda p: (blocks.index(get_block_index(p[0], p[1])), rows.index(p[0]), rows.index(p[1])))
 
 
 def puzzle_solve_iterative(puzzle: Puzzle):
@@ -291,7 +298,10 @@ def puzzle_solve(puzzle_original: Puzzle):
 
 
 def puzzle_is_solution(puzzle: Puzzle, solution: Puzzle):
-    return puzzle_is_complete(solution) and puzzle_is_valid(solution) and all(puzzle[i][j] == 0 or puzzle[i][j] == solution[i][j] for i in range(9) for j in range(9))
+    return puzzle_is_complete(solution) and \
+        puzzle_is_valid(solution) and \
+        all(puzzle[i][j] == 0 or puzzle[i][j] == solution[i][j]
+            for i in range(9) for j in range(9))
 
 
 def puzzle_from_csv(file_path: str) -> Puzzle:

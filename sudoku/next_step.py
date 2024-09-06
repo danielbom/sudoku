@@ -107,7 +107,9 @@ def compute_best_path_next_step1(puzzle: Puzzle) -> List[Coord]:
 
     if sorter:
         sorter = sorted(sorter, key=lambda pair: pair[0])
-        return sorted(path, key=lambda p: tuple([f[1](p) for f in sorter]), reverse=True)
+        return sorted(path,
+                      key=lambda p: tuple([f[1](p) for f in sorter]),
+                      reverse=True)
 
     return path
 

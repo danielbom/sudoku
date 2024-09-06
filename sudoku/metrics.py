@@ -2,7 +2,6 @@
 from collections import defaultdict
 from datetime import datetime
 
-
 METRIC_DISPLAY_INTERVAL = 1e10  # 5000
 
 

@@ -4,7 +4,6 @@ from typing import List, Tuple
 
 from .types import Blocks, Puzzle
 
-
 blocks_indexes = [
     # (curr_ix, up_ix, down_ix, left_ix, right_ix)
     (0, 6, 3, 2, 1),
@@ -57,7 +56,9 @@ def check_puzzle_is_solution(puzzle: Puzzle, solution: Puzzle):
 @functools.lru_cache(maxsize=None)
 def check_blocks_is_valid(blocks: Blocks):
     rows, cols = collect_rows_and_cols(blocks)
-    return all(map(check_values_is_valid, rows)) and all(map(check_values_is_valid, cols)) and check_values_is_valid(blocks.curr)
+    return all(map(check_values_is_valid, rows)) and \
+        all(map(check_values_is_valid, cols)) and \
+        check_values_is_valid(blocks.curr)
 
 
 def collect_rows_and_cols(blocks: Blocks):
@@ -80,7 +81,8 @@ def collect_rows_and_cols(blocks: Blocks):
 def collect_block_indexes(block_ix: int) -> List[Tuple[int, int]]:
     block_row = block_ix // 3
     block_col = block_ix % 3
-    return [(i + block_row * 3, j + block_col * 3) for i in range(3) for j in range(3)]
+    return [(i + block_row * 3, j + block_col * 3)
+            for i in range(3) for j in range(3)]
 
 
 def collect_puzzle_block(puzzle: Puzzle, block_ix: int) -> List[int]:
