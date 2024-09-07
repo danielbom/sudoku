@@ -14,6 +14,7 @@ from .next_step import (make_compute_next_step,
                         make_compute_next_step_heuristic1,
                         make_compute_next_step_heuristic2)
 from .solver import Solver
+import sudoku.solver_v2
 
 
 def run_cmd(cmd):
@@ -52,19 +53,36 @@ def command_solve(args):
     else:
         collect_next_steps = make_collect_valid_options()
 
-    metrics = Metrics()
-    solver = Solver(next_step, collect_next_steps, metrics)
+    if args.solver_version == "v1":
+        metrics = Metrics()
+        solver = Solver(next_step, collect_next_steps, metrics)
 
-    metrics.start()
-    if args.solve_type == "recursive":
-        solution = solver.solve_recursive(puzzle)
+        metrics.start()
+        if args.solve_type == "recursive":
+            solution = solver.solve_recursive(puzzle)
+        else:
+            solution = solver.solve_iterative(puzzle)
+        metrics.end()
+
+        if args.show_metrics:
+            metrics.display()
+            print()
     else:
-        solution = solver.solve_iterative(puzzle)
-    metrics.end()
+        metrics = Metrics()
+        metrics.start()
+        solution = [[x for x in row] for row in puzzle] # Copy puzzle
 
-    if args.show_metrics:
-        metrics.display()
-        print()
+        solver = sudoku.solver_v2.PuzzleSolver(solution, next_step)
+        solver.add_rule(sudoku.solver_v2.RuleHorizontal())
+        solver.add_rule(sudoku.solver_v2.RuleVertical())
+        solver.add_rule(sudoku.solver_v2.RuleBlock())
+
+        solver.solve()
+        metrics.end()
+
+        if args.show_metrics:
+            metrics.display()
+            print()
 
     print("Puzzle Solution: ")
     puzzle_display(solution)
@@ -120,12 +138,14 @@ def get_parser():
 
     sb = command(command_solve)
     sb.add_argument('puzzle_path', help='Path to the puzzle CSV file')
-    sb.add_argument(
-        '--solve-type', choices=["recursive", "iterative"], default="iterative", help='Solve type')
-    sb.add_argument('--next-step', choices=["base", "block_column", "block_row",
-                    "heuristic1", "heuristic2"], default="base", help='Next step')
-    sb.add_argument('--collect-next-steps', choices=[
-                    "valid_options", "valid_blocks"], default="valid_options", help='Collect next steps')
+    sb.add_argument('--solver-version',
+                    choices=["v1", "v2"], default="v1", help='Solver version')
+    sb.add_argument('--solve-type',
+                    choices=["recursive", "iterative"], default="iterative", help='Solve type')
+    sb.add_argument('--next-step',
+                    choices=["base", "block_column", "block_row", "heuristic1", "heuristic2"], default="base", help='Next step')
+    sb.add_argument('--collect-next-steps',
+                    choices=["valid_options", "valid_blocks"], default="valid_options", help='Collect next steps')
     sb.add_argument('--show-metrics', action='store_true', help='Show metrics')
     sb.add_argument('--solution-path', help='Path to the solution CSV file')
 
