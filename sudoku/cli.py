@@ -5,6 +5,7 @@ import glob
 import itertools
 import os
 import subprocess
+import time
 from pathlib import Path
 
 import sudoku.solver_v2
@@ -18,11 +19,12 @@ from .helpers import (check_puzzle_is_complete, check_puzzle_is_solution,
                       why_is_invalid)
 from .logger import Logger
 from .metrics import Metrics
-from .next_step import (make_compute_next_step,
+from .next_step import (SEQUENCE_1, make_compute_next_step,
                         make_compute_next_step_block_column,
                         make_compute_next_step_block_row,
                         make_compute_next_step_heuristic1,
-                        make_compute_next_step_heuristic2)
+                        make_compute_next_step_heuristic2,
+                        make_compute_next_step_sequence)
 from .rules import rule_apply_puzzle
 from .solver import Solver
 from .types import Game
@@ -52,13 +54,60 @@ def command_format_code(args):
     asyncio.run(format_files())
 
 
+def interactive(solver, puzzle):
+    show = True
+    count = 0
+    last_count = 0
+    start_time = time.time()
+    end_time = time.time()
+    for i, (solution, row_ix, col_ix, stack) in enumerate(solver.solve_interative(puzzle)):
+        if not show and i % 1000000 == 0:
+            print(
+                f'Iteration {i}: Stack size {len(stack)} Time {end_time - start_time} Coord ({row_ix}, {col_ix})')
+        else:
+            if count == 0:
+                end_time = time.time()
+                print(
+                    f'Iteration {i}: Stack size {len(stack)} Time {end_time - start_time} Coord ({row_ix}, {col_ix})')
+                puzzle_display(solution)
+
+        if count == 0:
+            new_count = input(">>> ").lower().strip()
+            if new_count == "s" or new_count == "show":
+                show = not show
+                if show:
+                    puzzle_display(solution)
+                continue
+            elif new_count == "q" or new_count == "quit":
+                break
+            elif new_count == "bp" or new_count == "breakpoint":
+                import pdb
+                pdb.set_trace()
+            else:
+                try:
+                    count = int(new_count) - 1
+                    last_count = count
+                except BaseException:
+                    count = last_count
+        else:
+            count -= 1
+    return solution
+
+
+def game_from_file(file_path: Path) -> Game:
+    if file_path.suffix == ".csv":
+        puzzle = puzzle_from_csv(file_path)
+        rules = ["normal rules"]
+        return Game(puzzle, [], rules)
+    elif file_path.suffix == ".txt":
+        return puzzle_from_txt(file_path)
+    else:
+        raise ValueError(f"Unknown file type: {file_path}")
+
+
 def command_solve(args):
-    if args.puzzle_path.suffix == ".csv":
-        puzzle = puzzle_from_csv(args.puzzle_path)
-        game = Game(puzzle, [], [])
-    elif args.puzzle_path.suffix == ".txt":
-        game = puzzle_from_txt(args.puzzle_path)
-        puzzle = game.puzzle
+    game = game_from_file(args.puzzle_path)
+    puzzle = game.puzzle
 
     print("Puzzle: ")
     puzzle_display(game.puzzle)
@@ -74,6 +123,8 @@ def command_solve(args):
         next_step = make_compute_next_step_heuristic1(puzzle)
     elif args.next_step == "heuristic2":
         next_step = make_compute_next_step_heuristic2(puzzle)
+    elif args.next_step == "sequence1":
+        next_step = make_compute_next_step_sequence(SEQUENCE_1)
     else:
         next_step = make_compute_next_step(puzzle)
 
@@ -93,12 +144,17 @@ def command_solve(args):
 
         metrics.start()
         logger.start()
-        if args.solve_type == "recursive":
-            solution = solver.solve_recursive(puzzle)
-        elif args.solve_type == "iterative_bfs":
-            solution = solver.solve_iterative_bfs(puzzle)
+
+        if args.interactive:
+            solution = interactive(solver, puzzle)
         else:
-            solution = solver.solve_iterative(puzzle)
+            if args.solve_type == "recursive":
+                solution = solver.solve_recursive(puzzle)
+            elif args.solve_type == "iterative_bfs":
+                solution = solver.solve_iterative_bfs(puzzle)
+            else:
+                solution = solver.solve_iterative(puzzle)
+
         metrics.end()
         logger.end()
 
@@ -130,11 +186,11 @@ def command_solve(args):
         print("ERROR: Puzzle solution is not valid")
 
     if args.solution_path:
-        puzzle_solution = puzzle_from_csv(args.solution_path)
+        game_solution = game_from_file(Path(args.solution_path))
         print()
-        if not check_puzzle_is_solution(puzzle, puzzle_solution):
+        if not check_puzzle_is_solution(game.puzzle, game_solution.puzzle):
             print("Puzzle solution: INVALID")
-        elif solution == puzzle_solution:
+        elif solution == game_solution.puzzle:
             print("Puzzle solution: VALID + MATCH")
         else:
             print("Puzzle solution: VALID + NO MATCH")
@@ -178,12 +234,14 @@ def get_parser():
     sb = command(command_solve)
     sb.add_argument('puzzle_path', help='Path to the puzzle CSV file',
                     type=Path)
+    sb.add_argument('-i', '--interactive', action='store_true',
+                    help='Interactive mode')
     sb.add_argument('--solver-version',
                     choices=["v1", "v2"], default="v1", help='Solver version')
     sb.add_argument('--solve-type',
                     choices=["recursive", "iterative", "iterative_bfs"], default="iterative", help='Solve type')
     sb.add_argument('--next-step',
-                    choices=["base", "block_column", "block_row", "heuristic1", "heuristic2"], default="base", help='Next step')
+                    choices=["base", "block_column", "block_row", "heuristic1", "heuristic2", "sequence1"], default="base", help='Next step')
     sb.add_argument('--collect-next-steps',
                     choices=["valid_options", "valid_blocks"], default="valid_options", help='Collect next steps')
     sb.add_argument('--logger-iterations', type=int, default=1e10,

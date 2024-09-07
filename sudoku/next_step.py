@@ -134,3 +134,52 @@ make_compute_next_step_heuristic1 = _make_compute_next_step_heuristic(
     compute_best_path_next_step1)
 make_compute_next_step_heuristic2 = _make_compute_next_step_heuristic(
     compute_best_path_next_step2)
+
+
+def _create_sequence_1():
+    # 1)
+    # 1 1 1 _ _ _ _ _ _
+    # _ _ _ 1 1 1 _ _ _
+    # _ _ _ _ _ _ 1 1 1
+    # 2)
+    # . . . _ _ _ 1 1 1
+    # 1 1 1 . . . _ _ _
+    # _ _ _ 1 1 1 . . .
+    # 3)
+    # . . . 1 1 1 . . .
+    # . . . . . . 1 1 1
+    # 1 1 1 . . . . . .
+    # 4) repeat + 3 and 6
+
+    sequence = []
+    for i in range(9):
+        sequence.append((i // 3, i))
+
+    n = len(sequence)
+    for i in range(n):
+        sequence.append(((sequence[i][0] + 1) % 3, sequence[i][1]))
+
+    n = len(sequence)
+    for i in range(n):
+        sequence.append((sequence[i][0] + 3, sequence[i][1]))
+
+    for i in range(n):
+        sequence.append((sequence[i][0] + 6, sequence[i][1]))
+
+    return sequence
+
+
+SEQUENCE_1 = _create_sequence_1()
+
+
+def make_compute_next_step_sequence(sequence: List[Coord]):
+    sequence_map = {sequence[i - 1]: sequence[i]
+                    for i in range(1, len(sequence))}
+
+    def compute_next_step_sequence(row_ix: int, col_ix: int):
+        next_ix = sequence.index((row_ix, col_ix)) + 1
+        if next_ix == len(sequence):
+            return (-1, -1)
+        return sequence[next_ix]
+
+    return NextStep(compute_next_step_sequence, sequence[0])

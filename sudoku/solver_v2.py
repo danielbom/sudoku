@@ -1,7 +1,7 @@
 import time
 from typing import List, Tuple
 
-from .helpers import puzzle_display, puzzle_from_txt
+from .helpers import cage_assert, puzzle_display, puzzle_from_txt
 from .next_step import (NextStep, make_compute_next_step,
                         make_compute_next_step_block_column,
                         make_compute_next_step_block_row)
@@ -157,6 +157,7 @@ if __name__ == '__main__':
 
     solver.add_rule(RuleConsecutivesOrtogonalAdjacents())
     for cage in cages:
+        cage_assert(cage)
         solver.add_rule(RuleCage(cage))
 
     solver.add_rule(RuleInfeasible(solver))

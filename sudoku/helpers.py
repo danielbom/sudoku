@@ -208,3 +208,12 @@ def puzzle_display(puzzle: Puzzle):
 
 def puzzle_copy(puzzle: Puzzle) -> Puzzle:
     return [row.copy() for row in puzzle]
+
+
+def cage_assert(cage: Cage):
+    if len(cage) > 9:
+        raise ValueError('Too many items in cage')
+    if len(cage) < 1:
+        raise ValueError('Too few items in cage')
+    if len(cage) != len(set(cage)):
+        raise ValueError('Duplicate items in cage')

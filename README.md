@@ -39,3 +39,13 @@ py ./cli.py solve ./puzzles/hard_2.csv --show-metrics --next-step heuristic1 --s
 Metrics:
     Solve Iterative : 213
     Duration        : 0:00:00.000999
+
+# Puzzle: cages.txt
+
+```bash
+py .\cli.py solve .\puzzles\cages.txt --show-metrics --logger-iterations 100000
+```
+
+Metrics: 
+    Solve Iterative DFS : 164686753
+    Duration            : 2:10:18.972162

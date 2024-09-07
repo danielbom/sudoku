@@ -27,6 +27,10 @@ class Solver:
             self.logger.puzzle(puzzle)
 
             next_row_ix, next_col_ix = self.next_step.next(row_ix, col_ix)
+            if next_row_ix == -1 and next_col_ix == -1:
+                # Infeasible
+                continue
+
             if puzzle[row_ix][col_ix] != 0:
                 return go(puzzle, next_row_ix, next_col_ix)
 
@@ -54,6 +58,38 @@ class Solver:
             self.logger.puzzle(puzzle)
 
             next_row_ix, next_col_ix = self.next_step.next(row_ix, col_ix)
+            if next_row_ix == -1 and next_col_ix == -1:
+                # Infeasible
+                continue
+
+            if puzzle[row_ix][col_ix] != 0:
+                stack.append((puzzle, next_row_ix, next_col_ix))
+                continue
+
+            stack.extend(self.collect_next_steps.collect(
+                puzzle, row_ix, col_ix, next_row_ix, next_col_ix))
+
+        return puzzle
+
+    def solve_interative(self, puzzle: Puzzle) -> Optional[Puzzle]:
+        start = self.next_step.start
+        stack = [(puzzle_copy(puzzle), start[0], start[1])]
+
+        while len(stack) > 0:
+            puzzle, row_ix, col_ix = stack.pop()
+            yield puzzle, row_ix, col_ix, stack
+
+            if row_ix >= 9 or col_ix >= 9:
+                break
+
+            self.metrics.collect("Solve Interative")
+            self.logger.puzzle(puzzle)
+
+            next_row_ix, next_col_ix = self.next_step.next(row_ix, col_ix)
+            if next_row_ix == -1 and next_col_ix == -1:
+                # Infeasible
+                continue
+
             if puzzle[row_ix][col_ix] != 0:
                 stack.append((puzzle, next_row_ix, next_col_ix))
                 continue
@@ -88,6 +124,10 @@ class Solver:
                 self.logger.puzzle(puzzle)
 
                 next_row_ix, next_col_ix = self.next_step.next(row_ix, col_ix)
+                if next_row_ix == -1 and next_col_ix == -1:
+                    # Infeasible
+                    continue
+
                 if puzzle[row_ix][col_ix] != 0:
                     stack.append((puzzle, next_row_ix, next_col_ix))
                     continue

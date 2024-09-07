@@ -82,12 +82,6 @@ class RuleBasic(Rule):
 
 class RuleCage(Rule):
     def __init__(self, cage: Cage):
-        if len(cage) > 9:
-            raise ValueError('Too many items in cage')
-        if len(cage) < 1:
-            raise ValueError('Too few items in cage')
-        if len(cage) != len(set(cage)):
-            raise ValueError('Duplicate items in cage')
         self.cage = cage
 
     def apply(self, puzzle: Puzzle, x: int, y: int) -> bool:
@@ -134,19 +128,19 @@ class RuleInfeasible(Rule):
     def __init__(self, rule: Rule):
         self.rule = rule
         self.count = 0
-        self.iterations = 10000
+        self.iterations = 1
 
     def generate_options(self, puzzle: Puzzle) -> Tuple[Tuple[int, int], List[int]]:
         for i in range(9):
             for j in range(9):
-                if puzzle[i][j] == 0:
-                    values = []
-                    for value in range(1, 10):
-                        puzzle[i][j] = value
-                        if self.rule.apply(puzzle, i, j):
-                            values.append(value)
-                        puzzle[i][j] = 0
-                    yield (i, j), values
+                initial = puzzle[i][j]
+                values = []
+                for value in range(1, 10):
+                    puzzle[i][j] = value
+                    if self.rule.apply(puzzle, i, j):
+                        values.append(value)
+                    puzzle[i][j] = initial
+                yield (i, j), values
 
     def apply(self, puzzle: Puzzle, _x: int, _y: int) -> bool:
         self.count += 1
