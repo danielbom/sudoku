@@ -20,7 +20,7 @@ class Logger:
         self.count += 1
         if self.count % self.interval == 0:
             self.display(puzzle)
-    
+
     def info(self, message):
         print(f"Logger: {message}")
 

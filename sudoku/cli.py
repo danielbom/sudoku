@@ -1,4 +1,9 @@
 import argparse
+import asyncio
+import concurrent.futures
+import glob
+import itertools
+import os
 import subprocess
 from pathlib import Path
 
@@ -23,14 +28,28 @@ from .solver import Solver
 from .types import Game
 
 
-def run_cmd(cmd):
-    print("CMD:", ' '.join(cmd))
-    result = subprocess.run(
-        cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    if result.stdout:
-        print(result.stdout)
-    if result.stderr:
-        print(result.stderr)
+def cmd_run(args, **kwargs):
+    print(f"CMD: '{' '.join(args)}'")
+    subprocess.run(args, **kwargs)
+
+
+def format_file(filepath):
+    cmd_run(["python3", "-m", "autopep8", "--in-place", filepath], check=True)
+    cmd_run(["python3", "-m", "isort", filepath], check=True)
+
+
+async def format_files():
+    files = itertools.chain(
+        glob.glob("*.py"),
+        glob.glob("sudoku/**/*.py", recursive=True)
+    )
+    with concurrent.futures.ThreadPoolExecutor(os.cpu_count()) as executor:
+        for _ in executor.map(format_file, files):
+            pass
+
+
+def command_format_code(args):
+    asyncio.run(format_files())
 
 
 def command_solve(args):
@@ -144,13 +163,6 @@ def command_why_invalid(args):
     puzzle_display(puzzle)
     print()
     why_is_invalid(puzzle)
-
-
-def command_format_code(args):
-    for filepath in Path(".").glob("**/*.py"):
-        run_cmd(["python3", "-m", "autopep8",
-                "--in-place", "--verbose", str(filepath)])
-        run_cmd(["python3", "-m", "isort", str(filepath)])
 
 
 def get_parser():

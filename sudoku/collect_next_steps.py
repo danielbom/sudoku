@@ -1,9 +1,9 @@
 from typing import List, Tuple
 
-from .helpers import (collect_puzzle_block, collect_puzzle_blocks,
-                      compute_block_index, puzzle_copy)
-from .rules import (RuleAll, RuleBasic, RuleCage, RuleInfeasible,
-                    RuleConsecutivesOrtogonalAdjacents)
+from .helpers import (check_blocks_is_valid, collect_puzzle_block,
+                      collect_puzzle_blocks, compute_block_index, puzzle_copy)
+from .rules import (RuleAll, RuleBasic, RuleCage,
+                    RuleConsecutivesOrtogonalAdjacents, RuleInfeasible)
 from .types import Cage, Game, Puzzle
 
 

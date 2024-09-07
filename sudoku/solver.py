@@ -44,7 +44,6 @@ class Solver:
     def solve_iterative(self, puzzle: Puzzle) -> Optional[Puzzle]:
         start = self.next_step.start
         stack = [(puzzle_copy(puzzle), start[0], start[1])]
-        stack_size = 1
 
         while len(stack) > 0:
             puzzle, row_ix, col_ix = stack.pop()
@@ -53,11 +52,6 @@ class Solver:
 
             self.metrics.collect("Solve Iterative DFS")
             self.logger.puzzle(puzzle)
-
-            new_stack_size = len(stack)
-            if new_stack_size > stack_size:
-                stack_size = new_stack_size
-                self.logger.info(f"Stack size: {stack_size}")
 
             next_row_ix, next_col_ix = self.next_step.next(row_ix, col_ix)
             if puzzle[row_ix][col_ix] != 0:
