@@ -1,106 +1,14 @@
 import time
 from typing import List, Tuple
 
+from .helpers import puzzle_display, puzzle_from_txt
 from .next_step import (NextStep, make_compute_next_step,
                         make_compute_next_step_block_column,
                         make_compute_next_step_block_row)
-from .types import Puzzle
-
-Cage = Tuple[int, int]
-
-
-class Rule:
-    def apply(self, puzzle: Puzzle, x: int, y: int) -> bool:
-        pass
-
-
-class RuleHorizontal(Rule):
-    def apply(self, puzzle: Puzzle, x: int, y: int) -> bool:
-        for i in range(9):
-            if i == y:
-                continue
-            if puzzle[x][i] == 0:
-                continue
-            if puzzle[x][i] == puzzle[x][y]:
-                return False
-        return True
-
-
-class RuleVertical(Rule):
-    def apply(self, puzzle: Puzzle, x: int, y: int) -> bool:
-        for i in range(9):
-            if i == x:
-                continue
-            if puzzle[i][y] == 0:
-                continue
-            if puzzle[i][y] == puzzle[x][y]:
-                return False
-        return True
-
-
-class RuleBlock(Rule):
-    def apply(self, puzzle: Puzzle, x: int, y: int) -> bool:
-        xx = x // 3 * 3
-        yy = y // 3 * 3
-        for i in range(3):
-            for j in range(3):
-                nx = xx + i
-                ny = yy + j
-                if nx == x and ny == y:
-                    continue
-                if puzzle[nx][ny] == 0:
-                    continue
-                if puzzle[nx][ny] == puzzle[x][y]:
-                    return False
-        return True
-
-
-class RuleCages(Rule):
-    def __init__(self, cages: List[Cage]):
-        if len(cages) > 9:
-            raise ValueError('Too many cages')
-        if len(cages) < 1:
-            raise ValueError('Too few cages')
-        if len(cages) != len(set(cages)):
-            raise ValueError('Duplicate cages')
-        self.cages = cages
-
-    def apply(self, puzzle: Puzzle, x: int, y: int) -> bool:
-        if (x, y) in self.cages:
-            for (cx, cy) in self.cages:
-                if x == cx and y == cy:
-                    continue
-                if puzzle[cx][cy] == 0:
-                    continue
-                if puzzle[x][y] == puzzle[cx][cy]:
-                    return False
-        return True
-
-
-class RuleConsecutivesOrtogonalAdjacents(Rule):
-    def apply(self, puzzle: Puzzle, x: int, y: int) -> bool:
-        value = puzzle[x][y]
-
-        if value > 1:
-            if x > 0 and puzzle[x - 1][y] == value - 1:
-                return False
-            if x < 8 and puzzle[x + 1][y] == value - 1:
-                return False
-            if y > 0 and puzzle[x][y - 1] == value - 1:
-                return False
-            if y < 8 and puzzle[x][y + 1] == value - 1:
-                return False
-        if value < 9:
-            if x > 0 and puzzle[x - 1][y] == value + 1:
-                return False
-            if x < 8 and puzzle[x + 1][y] == value + 1:
-                return False
-            if y > 0 and puzzle[x][y - 1] == value + 1:
-                return False
-            if y < 8 and puzzle[x][y + 1] == value + 1:
-                return False
-
-        return True
+from .rules import (Rule, RuleBlock, RuleCage,
+                    RuleConsecutivesOrtogonalAdjacents, RuleHorizontal,
+                    RuleVertical)
+from .types import Cage, Puzzle
 
 
 class RuleInfeasible(Rule):
@@ -109,7 +17,7 @@ class RuleInfeasible(Rule):
 
         self.cages_map = {}
         for rule in solver.rules:
-            if isinstance(rule, RuleCages):
+            if isinstance(rule, RuleCage):
                 for cage in rule.cages:
                     self.cages_map[cage] = rule.cages
 
@@ -218,27 +126,11 @@ class PuzzleSolver:
             self.puzzle[x][y] = 0
 
         return False
-    
+
     def solve(self) -> bool:
         self.solve_init()
         while not self.solve_next():
             pass
-
-    def show(self):
-        print('-------------------------')
-        for x in range(9):
-            print(end='| ')
-            for y in range(9):
-                if solver.puzzle[x][y] == 0:
-                    print('.', end=' ')
-                else:
-                    print(solver.puzzle[x][y], end=' ')
-                if y % 3 == 2:
-                    print('| ', end='')
-            print()
-            if x % 3 == 2:
-                print('-------------------------')
-        print()
 
 
 def make_compute_next_step_smart(solver: PuzzleSolver) -> NextStep:
@@ -253,28 +145,8 @@ def make_compute_next_step_smart(solver: PuzzleSolver) -> NextStep:
     return NextStep(next_step)
 
 
-def parse_puzzle(filename: str) -> (Puzzle, List[List[Cage]]):
-    puzzle = []
-    cages = []
-    with open(filename) as f:
-        _ = f.readline()  # puzzle:
-        for _ in range(9):
-            line = f.readline().strip()
-            puzzle.append([int(x.strip()) for x in line.split(',')])
-        _ = f.readline()  # cages:
-        while True:
-            line = f.readline().strip()
-            if not line:
-                break
-            cages.append([
-                tuple(map(int, xs.strip().split(',')))
-                for xs in line.split(';')
-            ])
-    return puzzle, cages
-
-
 if __name__ == '__main__':
-    puzzle, cages = parse_puzzle('puzzles/cages.txt')
+    puzzle, cages = puzzle_from_txt('puzzles/cages.txt')
 
     next_step = make_compute_next_step(puzzle)  # Basic
     solver = PuzzleSolver(puzzle, next_step)
@@ -285,7 +157,7 @@ if __name__ == '__main__':
 
     solver.add_rule(RuleConsecutivesOrtogonalAdjacents())
     for cage in cages:
-        solver.add_rule(RuleCages(cage))
+        solver.add_rule(RuleCage(cage))
 
     solver.add_rule(RuleInfeasible(solver))
 
@@ -306,7 +178,7 @@ if __name__ == '__main__':
                 end_time = time.time()
                 print(
                     f'Iteration {i}: Stack size {len(solver.stack)} Time {end_time - start_time}')
-                solver.show()
+                puzzle_display(solver.puzzle)
 
         if count == 0:
             new_count = input(">>> ")
@@ -314,7 +186,7 @@ if __name__ == '__main__':
             if new_count == "show":
                 show = not show
                 if show:
-                    solver.show()
+                    puzzle_display(solver.puzzle)
                 continue
             else:
                 try:
@@ -328,4 +200,4 @@ if __name__ == '__main__':
         solver.solve_next()
         i += 1
 
-    solver.show()
+    puzzle_display(solver.puzzle)

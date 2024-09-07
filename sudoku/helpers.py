@@ -2,7 +2,7 @@
 import functools
 from typing import List, Tuple
 
-from .types import Blocks, Puzzle
+from .types import Blocks, Cage, Game, Puzzle
 
 blocks_indexes = [
     # (curr_ix, up_ix, down_ix, left_ix, right_ix)
@@ -151,9 +151,59 @@ def puzzle_from_csv(file_path: str) -> Puzzle:
         return puzzle
 
 
-def puzzle_display(puzzle: Puzzle):
+def puzzle_from_txt(filename: str) -> Game:
+    puzzle = []
+    cages = []
+    rules = []
+    with open(filename) as f:
+        step = 0
+        for line in f:
+            line = line.strip()
+            if line == "":
+                step = 0
+                continue
+            elif line == "puzzle:":
+                step = 1
+                continue
+            elif line == "cages:":
+                step = 2
+                continue
+            elif line == "rules:":
+                step = 3
+                continue
+
+            if step == 1:
+                puzzle.append([int(x.strip()) for x in line.split(',')])
+            elif step == 2:
+                cages.append([
+                    tuple(map(int, xs.strip().split(',')))
+                    for xs in line.split(';')
+                ])
+            elif step == 3:
+                rules.append(line)
+    return Game(puzzle, cages, rules)
+
+
+def puzzle_display2(puzzle: Puzzle):
     for row in puzzle:
         print(*row, sep=", ")
+
+
+def puzzle_display(puzzle: Puzzle):
+    print('-------------------------')
+    for x in range(9):
+        print(end='| ')
+        for y in range(9):
+            if puzzle[x][y] == 0:
+                print('.', end=' ')
+            else:
+                print(puzzle[x][y], end=' ')
+            if y % 3 == 2:
+                print('| ', end='')
+        print()
+        if x % 3 == 2:
+            print('-------------------------')
+    print()
 
 
 def puzzle_copy(puzzle: Puzzle) -> Puzzle:
