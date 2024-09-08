@@ -29,7 +29,7 @@ class Solver:
             next_row_ix, next_col_ix = self.next_step.next(row_ix, col_ix)
             if next_row_ix == -1 and next_col_ix == -1:
                 # Infeasible
-                continue
+                return
 
             if puzzle[row_ix][col_ix] != 0:
                 return go(puzzle, next_row_ix, next_col_ix)
@@ -68,6 +68,90 @@ class Solver:
 
             stack.extend(self.collect_next_steps.collect(
                 puzzle, row_ix, col_ix, next_row_ix, next_col_ix))
+
+        return puzzle
+
+    def solve_threads(self, puzzle: Puzzle) -> Optional[Puzzle]:
+        import heapq
+        import os
+        import queue
+        import signal
+        import threading
+
+        start = self.next_step.start
+        queue_input = queue.Queue()
+        queue_output = queue.Queue()
+        # stack = [(puzzle_copy(puzzle), start[0], start[1])]
+
+        def consume():
+            while True:
+                args = queue_input.get()
+                if args is None:
+                    return
+
+                puzzle, row_ix, col_ix = args
+                if row_ix >= 9 or col_ix >= 9:
+                    queue_output.put((puzzle, None))
+                    return
+
+                self.metrics.collect("Solve Threads")
+                self.logger.puzzle(puzzle)
+
+                next_row_ix, next_col_ix = self.next_step.next(row_ix, col_ix)
+                if next_row_ix == -1 and next_col_ix == -1:
+                    queue_output.put((None, None))
+                    return
+
+                if puzzle[row_ix][col_ix] != 0:
+                    queue_input.put((puzzle, next_row_ix, next_col_ix))
+                    continue
+
+                nexts = self.collect_next_steps.collect(
+                    puzzle, row_ix, col_ix, next_row_ix, next_col_ix)
+                queue_output.put((None, nexts))
+
+        class HeapItem(tuple):
+            def __lt__(self, other):
+                return self[0].count(0) < other[0].count(0)
+
+        threads = []
+
+        def signal_handler(sig, frame):
+            stop_threads()
+            exit(0)
+
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
+        n = os.cpu_count()
+        threads = [threading.Thread(target=consume) for _ in range(n)]
+
+        for thread in threads:
+            thread.start()
+
+        def stop_threads():
+            for thread in threads:
+                queue_input.put(None)
+
+        queue_input.put((puzzle_copy(puzzle), start[0], start[1]))
+        heap = []
+        count = 1
+
+        while True:
+            puzzle, nexts = queue_output.get()
+            count -= 1
+
+            if puzzle is not None:
+                stop_threads()
+                return puzzle
+
+            if nexts is not None:
+                for it in nexts:
+                    heapq.heappush(heap, HeapItem(it))
+
+                if len(heap) > 0 and count < n:
+                    queue_input.put(heapq.heappop(heap))
+                    count += 1
 
         return puzzle
 

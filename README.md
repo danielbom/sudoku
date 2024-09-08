@@ -43,9 +43,14 @@ Metrics:
 # Puzzle: cages.txt
 
 ```bash
-py .\cli.py solve .\puzzles\cages.txt --show-metrics --logger-iterations 100000
+py ./cli.py solve ./puzzles/cages.txt --show-metrics --logger-iterations 100000 --solution-path ./puzzles/cages_solution.txt
 ```
 
 Metrics: 
     Solve Iterative DFS : 164686753
     Duration            : 2:10:18.972162
+
+
+Metrics: 
+    Solve Iterative DFS : 164686753
+    Duration            : 0:38:41.606125

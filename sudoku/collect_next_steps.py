@@ -1,10 +1,11 @@
-from typing import List, Tuple
+from typing import List, Set, Tuple
 
-from .helpers import (cage_assert, check_blocks_is_valid, collect_puzzle_block,
+from .helpers import (cage_assert, check_blocks_is_valid,
+                      collect_block_indexes, collect_puzzle_block,
                       collect_puzzle_blocks, compute_block_index, puzzle_copy)
 from .rules import (RuleAll, RuleBasic, RuleCage,
                     RuleConsecutivesOrtogonalAdjacents, RuleInfeasible)
-from .types import Cage, Game, Puzzle
+from .types import Cage, Coord, Game, Puzzle
 
 
 class CollectNextSteps:
@@ -79,20 +80,20 @@ def rule_from_game(game: Game):
 
 
 def collect_valid_options_with_game2(game: Game):
-    def all_options(puzzle: Puzzle, row_ix: int, col_ix: int) -> List[int]:
-        return list(range(1, 10))
+    def all_options(puzzle: Puzzle, row_ix: int, col_ix: int) -> Set[int]:
+        return set(range(1, 10))
 
-    def row_options(puzzle: Puzzle, row_ix: int, col_ix: int) -> List[int]:
+    def row_options(puzzle: Puzzle, row_ix: int, col_ix: int) -> Set[int]:
         return set(puzzle[row_ix])
 
-    def col_options(puzzle: Puzzle, row_ix: int, col_ix: int) -> List[int]:
+    def col_options(puzzle: Puzzle, row_ix: int, col_ix: int) -> Set[int]:
         return set([puzzle[i][col_ix] for i in range(9)])
 
-    def block_options(puzzle: Puzzle, row_ix: int, col_ix: int) -> List[int]:
+    def block_options(puzzle: Puzzle, row_ix: int, col_ix: int) -> Set[int]:
         return set(collect_puzzle_block(puzzle, compute_block_index(row_ix, col_ix)))
 
     def make_cage_options(cage: Cage):
-        def cage_options(puzzle: Puzzle, row_ix: int, col_ix: int) -> List[int]:
+        def cage_options(puzzle: Puzzle, row_ix: int, col_ix: int) -> Set[int]:
             if (row_ix, col_ix) in cage:
                 return set([puzzle[i][j] for i, j in cage])
             return set()
