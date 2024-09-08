@@ -156,6 +156,8 @@ def command_solve(args):
             elif args.solve_type == "threads":
                 # Not so good
                 solution = solver.solve_threads(puzzle)
+            elif args.solve_type == "smart":
+                solution = solver.solve_smart(puzzle)
             else:
                 solution = solver.solve_iterative(puzzle)
 
@@ -243,7 +245,7 @@ def get_parser():
     sb.add_argument('--solver-version',
                     choices=["v1", "v2"], default="v1", help='Solver version')
     sb.add_argument('--solve-type',
-                    choices=["recursive", "iterative", "iterative_bfs", "threads"], default="iterative", help='Solve type')
+                    choices=["recursive", "iterative", "iterative_bfs", "threads", "smart"], default="iterative", help='Solve type')
     sb.add_argument('--next-step',
                     choices=["base", "block_column", "block_row", "heuristic1", "heuristic2", "sequence1"], default="base", help='Next step')
     sb.add_argument('--collect-next-steps',

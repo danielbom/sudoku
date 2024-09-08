@@ -183,6 +183,66 @@ class Solver:
 
         return puzzle
 
+    def solve_smart(self, puzzle: Puzzle) -> Optional[Puzzle]:
+        start = self.next_step.start
+        stacks = [[] for _ in range(81 + 1)]
+
+        stacks[0].append((0, puzzle_copy(puzzle), start[0], start[1]))
+
+        iter_counter = 1
+        iter_start = 0
+        stack_counter = 0
+
+        while True:
+            stack = None
+            if iter_counter > 0:
+                iter_counter -= 1
+                if iter_counter == 0:
+                    iter_start = 0
+                    stack_counter = 81
+                for i, stack in enumerate(stacks):
+                    if i >= iter_start and len(stack) > 0:
+                        break
+                iter_start = i + 1
+                if iter_start >= 81:
+                    iter_start = 0
+                    iter_counter = 0
+                    stack_counter = 81
+                    continue
+            else:
+                stack_counter -= 1
+                if stack_counter == 0:
+                    iter_counter = 81
+                for stack in reversed(stacks):
+                    if len(stack) > 0:
+                        break
+
+            if stack is None:
+                break
+
+            depth, puzzle, row_ix, col_ix = stack.pop()
+            if row_ix >= 9 or col_ix >= 9:
+                break
+
+            self.metrics.collect("Solve Smart")
+            self.logger.puzzle(puzzle)
+
+            next_row_ix, next_col_ix = self.next_step.next(row_ix, col_ix)
+            if next_row_ix == -1 and next_col_ix == -1:
+                # Infeasible
+                continue
+            
+            if puzzle[row_ix][col_ix] != 0:
+                stacks[depth].append((depth, puzzle, next_row_ix, next_col_ix))
+                continue
+            
+            nexts = self.collect_next_steps.collect(
+                puzzle, row_ix, col_ix, next_row_ix, next_col_ix)
+            for next_puzzle, next_row_ix, next_col_ix in nexts:
+                stacks[depth + 1].append((depth + 1, next_puzzle, next_row_ix, next_col_ix))
+
+        return puzzle
+
     def solve_iterative_bfs(self, puzzle: Puzzle) -> Optional[Puzzle]:
         # TODO: Not working properly
 

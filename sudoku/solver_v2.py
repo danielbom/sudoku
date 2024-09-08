@@ -160,8 +160,6 @@ if __name__ == '__main__':
         cage_assert(cage)
         solver.add_rule(RuleCage(cage))
 
-    solver.add_rule(RuleInfeasible(solver))
-
     solver.next_step = make_compute_next_step_smart(solver)
     solver.solve_init()
     start_time = time.time()

@@ -54,3 +54,11 @@ Metrics:
 Metrics: 
     Solve Iterative DFS : 164686753
     Duration            : 0:38:41.606125
+
+```bash
+py ./cli.py solve ./puzzles/cages.txt --show-metrics --logger-iterations 100000 --solution-path ./puzzles/cages_solution.txt --solve-type smart 
+```
+
+Metrics: 
+    Solve Smart : 20608974
+    Duration    : 0:06:23.166877
